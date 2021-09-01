@@ -58,8 +58,9 @@ defmodule Para do
         end
       end
 
-  You can also use custom inline validators by supplying the function name as
-  as an atom.
+  You can also use custom inline validators by supplying the function name
+  as an atom. Custom inline validator will receive `changeset` and the
+  original `params` as the arguments.
 
       defmodule PhonePara do
         use Para
@@ -117,7 +118,7 @@ defmodule Para do
   @type t :: {:ok, map()} | {:error, Ecto.Changeset.t()}
 
   @doc """
-  Defines a validator schema with an action name and field definitions.
+  Define a validator schema with an action name and field definitions.
 
   This will generate a new function called `validate/2` with the action `name`
   and `params` as the arguments.
