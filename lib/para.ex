@@ -1,14 +1,17 @@
 defmodule Para do
   @moduledoc """
-  Build structured parameter validation service for web endpoints,
-  typically in Phoenix/Plug based applications.
+  Para is an Elixir library that provides structured and
+  declarative way of validating HTTP parameters.
+
+  Para uses Ecto under the hood and therefore inherits most of
+  its utilities such as changeset and built-in validators.
 
   ## Usage
 
   Let's imagine that you have a controller named `Web.FooController` and
   wanted to validate the parameters for its `:create` and `:update` actions
 
-  1. Define your parameters schema
+  First, let's define your parameters schema
 
       defmodule Web.FooPara do
         use Para
@@ -28,23 +31,26 @@ defmodule Para do
         end
       end
 
-  2. You can now use this module as validator in your controller
+  You can now use this module as a validator in your controller
 
       defmodule Web.FooController do
         use Web, :schema
         alias Web.FooPara
 
         def create(conn, params) do
-          with {:ok, params} <- FooPara.validate(:create, params) do
+          with {:ok, data} <- FooPara.validate(:create, params) do
             # ...
           end
         end
       end
 
-  ## Custom validators
+  ## Callback validator
 
-  Sometimes, you might require to use custom validators or perform
-  additional data manipulations. For this, you can use the `callback` macro.
+  Sometimes, you might want to use custom validators or need to perform
+  additional data manipulations. For this, you can use the `callback/1` macro.
+
+  The `callback/1` macro will always be the last function to be called
+  after the validator has parsed and validated the parameters.
 
       defmodule Web.FooPara do
         use Para
@@ -81,6 +87,25 @@ defmodule Para do
 
   @type t :: {:ok, map()} | {:error, Ecto.Changeset.t()}
 
+  @doc """
+  Defines a validator schema with an action name and field definitions.
+
+  This will generate a new function called `validate/2` with the action `name`
+  and `params` as the arguments.
+
+      iex> defmodule UserPara do
+      ...>   use Para
+      ...>
+      ...>   validator :create do
+      ...>     required :name
+      ...>     required :country
+      ...>   end
+      ...> end
+      ...>
+      ...> UserPara.validate(:create, %{"name" => "Syamil MJ", "country" => "Malaysia"})
+      {:ok, %{name: "Syamil MJ", country: "Malaysia"}}
+
+  """
   defmacro validator(name, do: block) do
     {:__block__, [], blocks} = block
 
@@ -91,6 +116,7 @@ defmodule Para do
     end
   end
 
+  @doc false
   def validate(module, blocks, params) do
     spec =
       blocks
@@ -134,6 +160,10 @@ defmodule Para do
     end
   end
 
+  @doc """
+  Define custom callback to perform any additional parsing or validation
+  to the changeset or parameters
+  """
   defmacro callback(name) do
     quote do
       {:callback, unquote(name)}
@@ -146,7 +176,7 @@ defmodule Para do
   ## Options
 
     * `:validator` - Define either one of the built-in Ecto.Changeset's validators
-      or use your own custom inline validator. Please refer docs on [Custom inline validator](#required/3-custom-inline-validator)
+      or use your own custom inline validator. Refer: [Custom inline validator](#required/3-custom-inline-validator)
 
     * `:droppable` - Drop the field when the value is nil. This
       is especially true for actions like update where only specific fields are
@@ -157,7 +187,7 @@ defmodule Para do
   You can define your own validator as such:
 
       def validate_country(changeset, field) do
-        # always return changeset
+        # ...
       end
 
   Then use it as an inline validator for your field
@@ -174,7 +204,8 @@ defmodule Para do
   end
 
   @doc """
-  Define an optional field
+  Similar to `required/3`, but the field will not be part of
+  require parameters.
   """
   defmacro optional(name, type \\ :string, opts \\ []) do
     quote do
@@ -209,12 +240,14 @@ defmodule Para do
     end
   end
 
+  @doc false
   def apply_inline_validators(changeset, module, validators) do
     Enum.reduce(validators, changeset, fn {key, validator}, acc ->
       apply_inline_validator(acc, module, key, validator)
     end)
   end
 
+  @doc false
   def apply_inline_validator(changeset, module, key, validator) do
     case validator do
       {function, data_or_opts} ->
@@ -228,6 +261,7 @@ defmodule Para do
     end
   end
 
+  @doc false
   def do_apply_inline_validator(module, function, params) do
     arity = length(params)
 
@@ -238,6 +272,7 @@ defmodule Para do
     end
   end
 
+  @doc false
   def apply_callback(changeset, _, nil, _), do: changeset
 
   def apply_callback(changeset, module, callback, params) do

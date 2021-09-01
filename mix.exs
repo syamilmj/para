@@ -1,10 +1,13 @@
 defmodule Para.MixProject do
   use Mix.Project
 
+  @version "0.1.1"
+  @source_url "https://github.com/syamilmj/para"
+
   def project do
     [
       app: :para,
-      version: "0.1.1",
+      version: @version,
       elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -15,7 +18,7 @@ defmodule Para.MixProject do
 
       # Docs
       name: "Para",
-      docs: docs()
+      docs: [source_ref: "v#{@version}", main: "Para", extras: ["CHANGELOG.md"]]
     ]
   end
 
@@ -36,16 +39,10 @@ defmodule Para.MixProject do
 
   def package do
     [
-      files: ~w(lib mix.exs README* LICENSE),
+      files: ~w(lib mix.exs README* LICENSE CHANGELOG.md),
       maintainers: ["Syamil MJ"],
       licenses: ["Apache 2.0"],
-      links: %{"GitHub" => "https://github.com/syamilmj/para"}
-    ]
-  end
-
-  defp docs do
-    [
-      extras: ["README.md"]
+      links: %{"GitHub" => @source_url}
     ]
   end
 end
