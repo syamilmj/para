@@ -10,11 +10,11 @@ defmodule Para.MixProject do
       deps: deps(),
 
       # Hex
-      description: "A toolkit for data mapping and language integrated query for Elixir",
+      description: "A declarative way of validating HTTP parameters",
       package: package(),
 
       # Docs
-      name: "Ecto",
+      name: "Para",
       docs: docs()
     ]
   end
@@ -28,7 +28,10 @@ defmodule Para.MixProject do
 
   # Run "mix help deps" to learn about dependencies.
   defp deps do
-    [{:ecto, "~> 3.7"}]
+    [
+      {:ecto, "~> 3.7"},
+      {:ex_doc, "~> 0.19", only: :dev, runtime: false}
+    ]
   end
 
   def package do
@@ -42,7 +45,7 @@ defmodule Para.MixProject do
 
   defp docs do
     [
-      extras: "README.md"
+      extras: ["README.md"]
     ]
   end
 end
