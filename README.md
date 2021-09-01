@@ -12,6 +12,8 @@ When building API endpoints that deal with a lot of parameters, it is sometimes 
 
 Para is meant to be implemented as part of your data processing pipeline, typically between external source to internal services. Using Para in this way avoids having to contaminate your controllers and internal services with repetitive inputs parsing and validations. It should also make testing a lot easier.
 
+Para also allows you to define multiple schemas inside the same module to promote consistency between your schema and controller files, resulting in better code organizations.
+
 ### Usage
 
 Add Para as a dependency in your `mix.exs` file.
