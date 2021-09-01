@@ -3,8 +3,10 @@ defmodule Para do
   Build structured parameter validation service for web endpoints,
   typically in Phoenix/Plug based applications.
 
-  Let's imagine that you have a controller named Web.FooController and
-  wanted to validate the parameters for its :create and :update actions
+  ## Usage
+
+  Let's imagine that you have a controller named `Web.FooController` and
+  wanted to validate the parameters for its `:create` and `:update` actions
 
   1. Define your parameters schema
 
@@ -39,8 +41,10 @@ defmodule Para do
         end
       end
 
-  Sometimes, you might require to use custom validators or perform data
-  manipulations. For this, you can use the `callback` macro. Example:
+  ## Custom validators
+
+  Sometimes, you might require to use custom validators or perform
+  additional data manipulations. For this, you can use the `callback` macro.
 
       defmodule Web.FooPara do
         use Para
@@ -74,8 +78,6 @@ defmodule Para do
       end
 
   """
-
-  use Ecto.Schema
 
   @type t :: {:ok, map()} | {:error, Ecto.Changeset.t()}
 
@@ -112,7 +114,7 @@ defmodule Para do
       end)
 
     callback =
-      Enum.find(blocks, fn
+      Enum.find_value(blocks, fn
         {:callback, name} -> name
         _ -> nil
       end)
@@ -182,13 +184,17 @@ defmodule Para do
 
   @doc false
   def discard_droppable_fields(blocks, params) do
-    Enum.filter(blocks, fn {_, name, _, opts} ->
-      with true <- opts[:droppable],
-           false <- Map.has_key?(params, Atom.to_string(name)) do
-        false
-      else
-        _ -> true
-      end
+    Enum.filter(blocks, fn
+      {_, name, _, opts} ->
+        with true <- opts[:droppable],
+             false <- Map.has_key?(params, Atom.to_string(name)) do
+          false
+        else
+          _ -> true
+        end
+
+      any ->
+        any
     end)
   end
 
@@ -248,7 +254,8 @@ defmodule Para do
           required: 3,
           optional: 1,
           optional: 2,
-          optional: 3
+          optional: 3,
+          callback: 1
         ]
     end
   end

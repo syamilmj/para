@@ -4,7 +4,8 @@ locals_without_parens = [
   required: 3,
   optional: 1,
   optional: 2,
-  optional: 3
+  optional: 3,
+  callback: 1
 ]
 
 [

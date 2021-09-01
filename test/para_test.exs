@@ -49,4 +49,32 @@ defmodule ParaTest do
     assert {:error, %{errors: [origin: {"can't be blank", _}]}} =
              AnimalPara.validate(:create, params)
   end
+
+  defmodule VehiclePara do
+    use Para
+    import Ecto.Changeset
+
+    validator :create do
+      required :brand
+      required :fuel_source
+      callback :validate_eco_friendliness
+    end
+
+    def validate_eco_friendliness(changeset, _params) do
+      case get_change(changeset, :fuel_source) do
+        fuel_source when fuel_source not in ["solar", "water", "wind"] ->
+          add_error(changeset, :fuel_source, "is not eco-friendly")
+
+        _ ->
+          changeset
+      end
+    end
+  end
+
+  test "it uses defined callback" do
+    params = %{"brand" => "Tesla", "fuel_source" => "coal"}
+
+    assert {:error, %{errors: [fuel_source: {"is not eco-friendly", _}]}} =
+             VehiclePara.validate(:create, params)
+  end
 end
