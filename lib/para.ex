@@ -44,6 +44,35 @@ defmodule Para do
         end
       end
 
+  ## Inline validators
+
+  Inline validator is a convenient way to validate your fields. This is
+  especially useful when you need to perform some basic validation
+  using `Ecto.Changeset`'s built-in validators.
+
+      defmodule PhonePara do
+        use Para
+
+        validator :update do
+          required :name, :string, validator: {:validate_length, [min: 3, max: 100]}
+        end
+      end
+
+  You can also use custom inline validators by supplying the function name as
+  as an atom.
+
+      defmodule PhonePara do
+        use Para
+
+        validator :update do
+          required :age, :string, validator: :validate_age
+        end
+
+        def validate_age(changeset, params) do
+          # ...
+        end
+      end
+
   ## Callback validator
 
   Sometimes, you might want to use custom validators or need to perform
@@ -98,16 +127,19 @@ defmodule Para do
       ...>
       ...>   validator :create do
       ...>     required :name
-      ...>     required :country
       ...>   end
       ...> end
       ...>
-      ...> UserPara.validate(:create, %{"name" => "Syamil MJ", "country" => "Malaysia"})
-      {:ok, %{name: "Syamil MJ", country: "Malaysia"}}
+      ...> UserPara.validate(:create, %{"name" => "Syamil MJ"})
+      {:ok, %{name: "Syamil MJ"}}
 
   """
   defmacro validator(name, do: block) do
-    {:__block__, [], blocks} = block
+    blocks =
+      case block do
+        {:__block__, [], blocks} -> blocks
+        block -> [block]
+      end
 
     quote do
       def validate(unquote(name), params) do
@@ -162,7 +194,7 @@ defmodule Para do
 
   @doc """
   Define custom callback to perform any additional parsing or validation
-  to the changeset or parameters
+  to the processed changeset or parameters
   """
   defmacro callback(name) do
     quote do
@@ -171,7 +203,7 @@ defmodule Para do
   end
 
   @doc """
-  Define a required field
+  Define a required field.
 
   ## Options
 
@@ -204,8 +236,9 @@ defmodule Para do
   end
 
   @doc """
-  Similar to `required/3`, but the field will not be part of
-  require parameters.
+  Define an optional field.
+
+  Similar to `required/3`, it also accepts the same Options
   """
   defmacro optional(name, type \\ :string, opts \\ []) do
     quote do
