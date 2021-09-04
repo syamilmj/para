@@ -77,4 +77,73 @@ defmodule ParaTest do
     assert {:error, %{errors: [fuel_source: {"is not eco-friendly", _}]}} =
              VehiclePara.validate(:create, params)
   end
+
+  defmodule EmbedsOnePara do
+    use Para
+
+    validator :test do
+      required :title, :string
+
+      embeds_one :product do
+        required :name
+        required :price, :float
+      end
+    end
+  end
+
+  test "it validates embeds_one" do
+    params = %{"title" => "test", "product" => %{"name" => "TEST", "price" => "10.00"}}
+
+    assert {:ok, %{title: "test", product: %{name: "TEST", price: 10.0}}} =
+             EmbedsOnePara.validate(:test, params)
+  end
+
+  test "it invalidates invalid embeds_one params" do
+    params = %{"title" => "test", "product" => %{"price" => "10.00"}}
+
+    assert {:error, %{changes: %{product: %{errors: [name: {"can't be blank", _}]}}}} =
+             EmbedsOnePara.validate(:test, params)
+  end
+
+  defmodule EmbedsManyPara do
+    use Para
+
+    validator :test do
+      required :title, :string
+
+      embeds_many :products do
+        required :name
+        required :price, :float
+      end
+    end
+  end
+
+  test "it validates embeds_many" do
+    params = %{
+      "title" => "test",
+      "products" => [
+        %{"name" => "TEST1", "price" => "10.00"},
+        %{"name" => "TEST2", "price" => "20.00"}
+      ]
+    }
+
+    assert {:ok,
+            %{
+              title: "test",
+              products: [%{name: "TEST1", price: 10.0}, %{name: "TEST2", price: 20.0}]
+            }} = EmbedsManyPara.validate(:test, params)
+  end
+
+  test "it invalidates invalid embeds_many params" do
+    invalid_params = %{
+      "title" => "test",
+      "products" => [
+        %{"name" => "TEST1", "price" => "10.00"},
+        %{"name" => "TEST2", "price" => "string"}
+      ]
+    }
+
+    assert {:error, %{changes: %{products: [_, %{valid?: false}]}}} =
+             EmbedsManyPara.validate(:test, invalid_params)
+  end
 end

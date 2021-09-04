@@ -1,5 +1,7 @@
 # Para
 
+[![Hex.pm](https://img.shields.io/hexpm/v/para.svg)](https://hex.pm/packages/para)
+
 Para is an Elixir library that provides structured and declarative way of validating HTTP parameters.
 
 Para uses Ecto under the hood and therefore inherits most of its utilities such as changeset and built-in validators.
@@ -31,7 +33,7 @@ After you are done, run `mix deps.get` in your shell to fetch and compile Para.
 First, let's define your parameters schema
 
 ```elixir
-defmodule Web.FooPara do
+defmodule Web.UserPara do
   use Para
 
   validator :create do
@@ -42,9 +44,9 @@ defmodule Web.FooPara do
   end
 
   validator :update do
-    optional :name, :string
-    optional :age, :integer
-    optional :email, :string
+    required :name, :string
+    required :age, :integer
+    required :email, :string
     optional :phone, :string
   end
 end
@@ -53,22 +55,22 @@ end
 You can now use this module as a validator in your controller
 
 ```elixir
-defmodule Web.FooController do
+defmodule Web.UserController do
   use Web, :schema
-  alias Web.FooPara
+  alias Web.UserPara
 
   def create(conn, params) do
-    with {:ok, data} <- FooPara.validate(:create, params) do
+    with {:ok, data} <- UserPara.validate(:create, params) do
       # ...
     end
   end
 
   def update(conn, params) do
-    with {:ok, data} <- FooPara.validate(:update, params) do
+    with {:ok, data} <- UserPara.validate(:update, params) do
       # ...
     end
   end
 end
 ```
 
-For more advanced usage, please refer to the [docs](https://hexdocs.pm/para/api-reference.html)
+For more advanced usage, please refer to the [docs](https://hexdocs.pm/para/)
