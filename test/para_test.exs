@@ -98,6 +98,13 @@ defmodule ParaTest do
              EmbedsOnePara.validate(:test, params)
   end
 
+  test "it validates embeds_one with atom keys" do
+    params = %{title: "test", product: %{name: "TEST", price: "10.00"}}
+
+    assert {:ok, %{title: "test", product: %{name: "TEST", price: 10.0}}} =
+             EmbedsOnePara.validate(:test, params)
+  end
+
   test "it invalidates invalid embeds_one params" do
     params = %{"title" => "test", "product" => %{"price" => "10.00"}}
 

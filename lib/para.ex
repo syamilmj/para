@@ -195,21 +195,19 @@ defmodule Para do
     {spec.data, spec.types}
     |> Ecto.Changeset.cast(params, spec.permitted)
     |> Ecto.Changeset.validate_required(spec.required)
-    |> validate_embeds(module, spec, params)
+    |> validate_embeds(module, spec)
     |> apply_inline_validators(module, spec.validators)
     |> apply_callback(module, callback, params)
   end
 
   @doc false
-  def validate_embeds(changeset, module, %{embeds: embeds}, params) do
+  def validate_embeds(changeset, module, %{embeds: embeds}) do
     Enum.reduce(embeds, changeset, fn {name, embed}, acc ->
-      validate_embed(acc, module, name, embed, params)
+      validate_embed(acc, module, name, embed, changeset.params)
     end)
   end
 
-  def validate_embeds(changeset, _, _, _) do
-    changeset
-  end
+  def validate_embeds(changeset, _, _), do: changeset
 
   def validate_embed(changeset, module, name, {:embed_one, block}, params) do
     params = Map.get(params, Atom.to_string(name))
