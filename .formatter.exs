@@ -5,7 +5,9 @@ locals_without_parens = [
   optional: 1,
   optional: 2,
   optional: 3,
-  callback: 1
+  callback: 1,
+  embeds_one: 2,
+  embeds_many: 2
 ]
 
 [
