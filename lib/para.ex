@@ -1,7 +1,7 @@
 defmodule Para do
   @moduledoc """
   Para is an Elixir library that provides structured and
-  declarative way of validating HTTP parameters.
+  declarative way to parse and validate parameters.
 
   Para uses Ecto under the hood and therefore inherits most of
   its utilities such as changeset and built-in validators.

@@ -1,7 +1,7 @@
 defmodule Para.MixProject do
   use Mix.Project
 
-  @version "0.1.1"
+  @version "0.2.0"
   @source_url "https://github.com/syamilmj/para"
 
   def project do
@@ -13,7 +13,7 @@ defmodule Para.MixProject do
       deps: deps(),
 
       # Hex
-      description: "A declarative way of validating HTTP parameters",
+      description: "A declarative way to parse and validate parameters",
       package: package(),
 
       # Docs

@@ -2,7 +2,7 @@
 
 [![Hex.pm](https://img.shields.io/hexpm/v/para.svg)](https://hex.pm/packages/para)
 
-Para is an Elixir library that provides structured and declarative way of validating HTTP parameters.
+Para is an Elixir library that provides structured and declarative way to parse and validate parameters.
 
 Para uses Ecto under the hood and therefore inherits most of its utilities such as changeset and built-in validators.
 
