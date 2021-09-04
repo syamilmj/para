@@ -8,7 +8,7 @@ defmodule Para do
 
   ## Usage
 
-  Let's imagine that you have a controller named `Web.FooController` and
+  Let's imagine that you have a controller named `Web.UserController` and
   wanted to validate the parameters for its `:create` and `:update` actions
 
   First, let's define your parameters schema
@@ -82,7 +82,7 @@ defmodule Para do
   The `callback/1` macro will always be the last function to be called
   after the validator has parsed and validated the parameters.
 
-      defmodule Web.FooPara do
+      defmodule Web.UserPara do
         use Para
 
         validator :create do
