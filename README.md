@@ -8,7 +8,7 @@ Para uses Ecto under the hood and therefore inherits most of its utilities such 
 
 ### Why use Para?
 
-When building API endpoints that deal with a lot of parameters, it is sometimes not enough to just rely on Ecto schema for parsing and validation. A lot of times the HTTP parameters do not always represent the final form of the data that gets sent to the database.
+When building API endpoints that deal with a lot of parameters, it is sometimes not enough to just rely on database schema for parsing and validation. A lot of times the HTTP parameters do not always represent the final form of the data that gets sent to the database.
 
 ![Pipeline](https://user-images.githubusercontent.com/845515/131730786-61c360bd-43ca-4dbc-a0ce-b3a283eeb3cb.png)
 
