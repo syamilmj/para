@@ -33,7 +33,7 @@ defmodule Para.MixProject do
   defp deps do
     [
       {:ecto, "~> 3.7"},
-      {:ex_doc, "~> 0.19", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.20", only: :dev, runtime: false}
     ]
   end
 

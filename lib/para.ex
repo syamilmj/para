@@ -133,6 +133,12 @@ defmodule Para do
           embeds_one: 2,
           embeds_many: 2
         ]
+
+      @doc """
+      Parse and validate parameters for the given schema
+      """
+      @spec validate(atom, map) :: {:ok, map} | {:error, Ecto.Changeset.t()}
+      def validate(action, params)
     end
   end
 
@@ -162,12 +168,6 @@ defmodule Para do
       end
 
     quote do
-      @doc """
-      Parse and validate parameters for the given schema
-
-      Dynamically define type for `params`
-      """
-      @spec validate(atom, map) :: {:ok, map} | {:error, Ecto.Changeset.t()}
       def validate(unquote(name), params) do
         Para.validate(__MODULE__, unquote(blocks), params)
       end
