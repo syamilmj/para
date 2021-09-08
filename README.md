@@ -1,6 +1,7 @@
 # Para
 
 [![Hex.pm](https://img.shields.io/hexpm/v/para.svg)](https://hex.pm/packages/para)
+[![Build Status](https://github.com/syamilmj/para/actions/workflows/ci.yml/badge.svg?name=CI)](https://github.com/syamilmj/para/actions)
 
 Para is an Elixir library that provides structured and declarative way to parse and validate parameters.
 
