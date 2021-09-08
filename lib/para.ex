@@ -135,7 +135,7 @@ defmodule Para do
         ]
 
       @doc """
-      Parse and validate parameters for the given schema
+      Parse and validate parameters for a given action
       """
       @spec validate(atom, map) :: {:ok, map} | {:error, Ecto.Changeset.t()}
       def validate(action, params)
@@ -172,108 +172,6 @@ defmodule Para do
         Para.validate(__MODULE__, unquote(blocks), params)
       end
     end
-  end
-
-  @doc false
-  def validate(module, blocks, params) do
-    case changeset = do_validate(module, blocks, params) do
-      %{valid?: true} -> {:ok, apply_changes(changeset)}
-      _ -> {:error, changeset}
-    end
-  end
-
-  @doc false
-  def do_validate(module, blocks, params) do
-    spec = build_spec(blocks, params)
-
-    callback =
-      Enum.find_value(blocks, fn
-        {:callback, name} -> name
-        _ -> nil
-      end)
-
-    {spec.data, spec.types}
-    |> Ecto.Changeset.cast(params, spec.permitted)
-    |> Ecto.Changeset.validate_required(spec.required)
-    |> validate_embeds(module, spec)
-    |> apply_inline_validators(module, spec.validators)
-    |> apply_callback(module, callback, params)
-  end
-
-  @doc false
-  def validate_embeds(changeset, module, %{embeds: embeds}) do
-    Enum.reduce(embeds, changeset, fn {name, embed}, acc ->
-      validate_embed(acc, module, name, embed, changeset.params)
-    end)
-  end
-
-  def validate_embeds(changeset, _, _), do: changeset
-
-  def validate_embed(changeset, module, name, {:embed_one, block}, params) do
-    params = Map.get(params, Atom.to_string(name))
-
-    case do_validate(module, block, params) do
-      %{valid?: true} = valid_changeset ->
-        Ecto.Changeset.put_change(changeset, name, valid_changeset)
-
-      invalid_changeset ->
-        Ecto.Changeset.put_change(%{changeset | valid?: false}, name, invalid_changeset)
-    end
-  end
-
-  def validate_embed(changeset, module, name, {:embed_many, block}, params) do
-    params = Map.get(params, Atom.to_string(name))
-
-    if is_list(params) do
-      Enum.reduce(params, changeset, fn embedded_params, acc ->
-        embedded_changesets = Ecto.Changeset.get_change(acc, name, [])
-
-        case do_validate(module, block, embedded_params) do
-          %{valid?: true} = valid_changeset ->
-            Ecto.Changeset.put_change(
-              acc,
-              name,
-              embedded_changesets ++ [valid_changeset]
-            )
-
-          invalid_changeset ->
-            Ecto.Changeset.put_change(
-              %{acc | valid?: false},
-              name,
-              embedded_changesets ++ [invalid_changeset]
-            )
-        end
-      end)
-    end
-  end
-
-  def build_spec(blocks, params) do
-    blocks
-    |> discard_droppable_fields(params)
-    |> Enum.reduce(%{}, fn
-      {:embed_one, name, block}, acc ->
-        acc
-        |> put_in([Access.key(:data, %{}), name], nil)
-        |> put_in([Access.key(:embeds, %{}), name], {:embed_one, block})
-        |> put_in([Access.key(:types, %{}), name], {:map, :string})
-
-      {:embed_many, name, block}, acc ->
-        acc
-        |> put_in([Access.key(:data, %{}), name], nil)
-        |> put_in([Access.key(:embeds, %{}), name], {:embed_many, block})
-        |> put_in([Access.key(:types, %{}), name], {:map, :string})
-
-      {requirement, name, type, opts}, acc ->
-        acc
-        |> put_in([Access.key(:data, %{}), name], opts[:default])
-        |> put_in([Access.key(:types, %{}), name], type)
-        |> assign_permitted_fields(name)
-        |> assign_required_fields(requirement, name)
-        |> assign_inline_validators(name, opts)
-
-      _, acc ->
-        acc
-    end)
   end
 
   @doc """
@@ -362,6 +260,64 @@ defmodule Para do
   end
 
   @doc false
+  def validate(module, blocks, params) do
+    case changeset = do_validate(module, blocks, params) do
+      %{valid?: true} -> {:ok, apply_changes(changeset)}
+      _ -> {:error, changeset}
+    end
+  end
+
+  @doc false
+  def do_validate(module, blocks, params) do
+    spec = build_spec(blocks, params)
+
+    callback =
+      Enum.find_value(blocks, fn
+        {:callback, name} -> name
+        _ -> nil
+      end)
+
+    {spec.data, spec.types}
+    |> Ecto.Changeset.cast(params, spec.permitted)
+    |> Ecto.Changeset.validate_required(spec.required)
+    |> validate_embeds(module, spec)
+    |> apply_inline_validators(module, spec.validators)
+    |> apply_callback(module, callback, params)
+  end
+
+  @doc false
+  def build_spec(blocks, params) do
+    default = %{data: %{}, types: %{}, embeds: %{}, permitted: [], required: [], validators: %{}}
+
+    blocks
+    |> discard_droppable_fields(params)
+    |> Enum.reduce(default, fn
+      {:embed_one, name, block}, acc ->
+        acc
+        |> put_in([:data, name], nil)
+        |> put_in([:embeds, name], {:embed_one, block})
+        |> put_in([:types, name], {:map, :string})
+
+      {:embed_many, name, block}, acc ->
+        acc
+        |> put_in([:data, name], nil)
+        |> put_in([:embeds, name], {:embed_many, block})
+        |> put_in([:types, name], {:map, :string})
+
+      {requirement, name, type, opts}, acc ->
+        acc
+        |> put_in([:data, name], opts[:default])
+        |> put_in([:types, name], type)
+        |> assign_permitted_fields(name)
+        |> assign_required_fields(requirement, name)
+        |> assign_inline_validators(name, opts)
+
+      _, acc ->
+        acc
+    end)
+  end
+
+  @doc false
   def discard_droppable_fields(blocks, params) do
     Enum.filter(blocks, fn
       # optional/required fields
@@ -389,15 +345,14 @@ defmodule Para do
 
   @doc false
   def assign_permitted_fields(spec, name) do
-    permitted = spec[:permitted] || []
-    put_in(spec, [Access.key(:permitted, [])], permitted ++ [name])
+    put_in(spec, [:permitted], spec.permitted ++ [name])
   end
 
   @doc false
   def assign_required_fields(spec, requirement, name) do
     case requirement do
       :required ->
-        put_in(spec, [Access.key(:required, [])], Map.get(spec, :required, []) ++ [name])
+        put_in(spec, [:required], spec.required ++ [name])
 
       :optional ->
         spec
@@ -406,12 +361,58 @@ defmodule Para do
 
   @doc false
   def assign_inline_validators(spec, name, opts) do
-    validators = spec[:validators] || %{}
-
     if validator = opts[:validator] do
-      put_in(spec, [Access.key(:validators, %{}), name], validator)
+      put_in(spec, [:validators, name], validator)
     else
-      put_in(spec, [Access.key(:validators, %{})], validators)
+      put_in(spec, [:validators], spec.validators)
+    end
+  end
+
+  @doc false
+  def validate_embeds(changeset, module, %{embeds: embeds}) do
+    Enum.reduce(embeds, changeset, fn {name, embed}, acc ->
+      validate_embed(acc, module, name, embed, changeset.params)
+    end)
+  end
+
+  def validate_embeds(changeset, _, _), do: changeset
+
+  @doc false
+  def validate_embed(changeset, module, name, {:embed_one, block}, params) do
+    params = Map.get(params, Atom.to_string(name))
+
+    case do_validate(module, block, params) do
+      %{valid?: true} = valid_changeset ->
+        Ecto.Changeset.put_change(changeset, name, valid_changeset)
+
+      invalid_changeset ->
+        Ecto.Changeset.put_change(%{changeset | valid?: false}, name, invalid_changeset)
+    end
+  end
+
+  def validate_embed(changeset, module, name, {:embed_many, block}, params) do
+    params = Map.get(params, Atom.to_string(name))
+
+    if is_list(params) do
+      Enum.reduce(params, changeset, fn embedded_params, acc ->
+        embedded_changesets = Ecto.Changeset.get_change(acc, name, [])
+
+        case do_validate(module, block, embedded_params) do
+          %{valid?: true} = valid_changeset ->
+            Ecto.Changeset.put_change(
+              acc,
+              name,
+              embedded_changesets ++ [valid_changeset]
+            )
+
+          invalid_changeset ->
+            Ecto.Changeset.put_change(
+              %{acc | valid?: false},
+              name,
+              embedded_changesets ++ [invalid_changeset]
+            )
+        end
+      end)
     end
   end
 

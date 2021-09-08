@@ -14,7 +14,7 @@ defmodule ParaTest do
   end
 
   test "it validates required fields" do
-    assert ProductPara.validate(:create, %{})
+    assert {:error, %{valid?: false}} = ProductPara.validate(:create, %{})
   end
 
   test "it validates using defined validator" do
@@ -105,7 +105,7 @@ defmodule ParaTest do
              EmbedsOnePara.validate(:test, params)
   end
 
-  test "it invalidates invalid embeds_one params" do
+  test "it rejects invalid embeds_one params" do
     params = %{"title" => "test", "product" => %{"price" => "10.00"}}
 
     assert {:error, %{changes: %{product: %{errors: [name: {"can't be blank", _}]}}}} =
@@ -141,7 +141,7 @@ defmodule ParaTest do
             }} = EmbedsManyPara.validate(:test, params)
   end
 
-  test "it invalidates invalid embeds_many params" do
+  test "it rejects invalid embeds_many params" do
     invalid_params = %{
       "title" => "test",
       "products" => [
@@ -152,5 +152,41 @@ defmodule ParaTest do
 
     assert {:error, %{changes: %{products: [_, %{valid?: false}]}}} =
              EmbedsManyPara.validate(:test, invalid_params)
+  end
+
+  defmodule EmbedsManyWithCallback do
+    use Para
+    import Ecto.Changeset
+
+    validator :test do
+      embeds_many :children do
+        required :first_name
+        required :last_name
+        optional :full_name
+        callback :assign_full_name
+      end
+    end
+
+    def assign_full_name(changeset, _params) do
+      with nil <- get_change(changeset, :full_name),
+           first_name when is_binary(first_name) <- get_change(changeset, :first_name),
+           last_name when is_binary(last_name) <- get_change(changeset, :last_name) do
+        put_change(changeset, :full_name, "#{first_name} #{last_name}")
+      else
+        _ -> changeset
+      end
+    end
+  end
+
+  test "it runs embedded callback" do
+    params = %{
+      children: [
+        %{first_name: "Eli", last_name: "Ji"},
+        %{first_name: "Fang", last_name: "Xe Yi", full_name: "Fang XY"}
+      ]
+    }
+
+    assert {:ok, %{children: [%{full_name: "Eli Ji"}, %{full_name: "Fang XY"}]}} =
+             EmbedsManyWithCallback.validate(:test, params)
   end
 end
