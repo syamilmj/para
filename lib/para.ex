@@ -161,15 +161,15 @@ defmodule Para do
 
   """
   defmacro validator(name, do: block) do
-    blocks =
+    fields =
       case block do
-        {:__block__, _, blocks} -> blocks
+        {:__block__, _, fields} -> fields
         block -> [block]
       end
 
     quote do
       def validate(unquote(name), params) do
-        Para.validate(__MODULE__, unquote(blocks), params)
+        Para.validate(__MODULE__, unquote(fields), params)
       end
     end
   end
@@ -233,14 +233,14 @@ defmodule Para do
   Define an embedded map field
   """
   defmacro embeds_one(name, do: block) do
-    blocks =
+    fields =
       case block do
-        {:__block__, _, blocks} -> blocks
+        {:__block__, _, fields} -> fields
         block -> [block]
       end
 
     quote do
-      {:embed_one, unquote(name), unquote(blocks)}
+      {:embed_one, unquote(name), unquote(fields)}
     end
   end
 
@@ -248,31 +248,31 @@ defmodule Para do
   Define an embedded array of maps field
   """
   defmacro embeds_many(name, do: block) do
-    blocks =
+    fields =
       case block do
-        {:__block__, _, blocks} -> blocks
+        {:__block__, _, fields} -> fields
         block -> [block]
       end
 
     quote do
-      {:embed_many, unquote(name), unquote(blocks)}
+      {:embed_many, unquote(name), unquote(fields)}
     end
   end
 
   @doc false
-  def validate(module, blocks, params) do
-    case changeset = do_validate(module, blocks, params) do
+  def validate(module, fields, params) do
+    case changeset = do_validate(module, fields, params) do
       %{valid?: true} -> {:ok, apply_changes(changeset)}
       _ -> {:error, changeset}
     end
   end
 
   @doc false
-  def do_validate(module, blocks, params) do
-    spec = build_spec(blocks, params)
+  def do_validate(module, fields, params) do
+    spec = build_spec(fields, params)
 
     callback =
-      Enum.find_value(blocks, fn
+      Enum.find_value(fields, fn
         {:callback, name} -> name
         _ -> nil
       end)
@@ -286,10 +286,10 @@ defmodule Para do
   end
 
   @doc false
-  def build_spec(blocks, params) do
+  def build_spec(fields, params) do
     default = %{data: %{}, types: %{}, embeds: %{}, permitted: [], required: [], validators: %{}}
 
-    blocks
+    fields
     |> discard_droppable_fields(params)
     |> Enum.reduce(default, fn
       {:embed_one, name, block}, acc ->
@@ -318,8 +318,8 @@ defmodule Para do
   end
 
   @doc false
-  def discard_droppable_fields(blocks, params) do
-    Enum.filter(blocks, fn
+  def discard_droppable_fields(fields, params) do
+    Enum.filter(fields, fn
       # optional/required fields
       {_, name, _, opts} ->
         with true <- opts[:droppable],
