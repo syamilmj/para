@@ -141,6 +141,11 @@ defmodule ParaTest do
             }} = EmbedsManyPara.validate(:test, params)
   end
 
+  test "it validates empty embeds_many params" do
+    params = %{"title" => "test", "products" => nil}
+    assert {:ok, %{title: "test", products: nil}} = EmbedsManyPara.validate(:test, params)
+  end
+
   test "it rejects invalid embeds_many params" do
     invalid_params = %{
       "title" => "test",
