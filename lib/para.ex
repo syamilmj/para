@@ -454,10 +454,6 @@ defmodule Para do
   end
 
   @doc false
-  def apply_changes(list) when is_list(list) do
-    Enum.map(list, &apply_changes/1)
-  end
-
   def apply_changes(%{changes: changes, data: data}) do
     Enum.reduce(changes, data, fn
       {key, list}, acc when is_list(list) ->
@@ -470,4 +466,10 @@ defmodule Para do
         Map.put(acc, key, value)
     end)
   end
+
+  def apply_changes(list) when is_list(list) do
+    Enum.map(list, &apply_changes/1)
+  end
+
+  def apply_changes(any), do: any
 end
