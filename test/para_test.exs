@@ -194,4 +194,21 @@ defmodule ParaTest do
     assert {:ok, %{children: [%{full_name: "Eli Ji"}, %{full_name: "Fang XY"}]}} =
              EmbedsManyWithCallback.validate(:test, params)
   end
+
+  defmodule ArrayMapPara do
+    use Para
+
+    validator :test do
+      required :data, {:array, :map}
+      required :list, {:array, :string}
+    end
+  end
+
+  test "it validates arrays and returns original data" do
+    data = [%{"foo" => "bar"}, %{"baz" => "qux"}]
+    list = ["one", "two"]
+    params = %{"data" => data, "list" => list}
+
+    assert {:ok, %{data: ^data, list: ^list}} = ArrayMapPara.validate(:test, params)
+  end
 end
