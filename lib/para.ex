@@ -349,22 +349,18 @@ defmodule Para do
   end
 
   @doc false
-  def assign_required_fields(spec, requirement, name) do
-    case requirement do
-      :required ->
-        put_in(spec, [:required], spec.required ++ [name])
-
-      :optional ->
-        spec
-    end
+  def assign_required_fields(spec, :required, name) do
+    put_in(spec, [:required], spec.required ++ [name])
   end
+
+  def assign_required_fields(spec, _, _), do: spec
 
   @doc false
   def assign_inline_validators(spec, name, opts) do
     if validator = opts[:validator] do
       put_in(spec, [:validators, name], validator)
     else
-      put_in(spec, [:validators], spec.validators)
+      spec
     end
   end
 
