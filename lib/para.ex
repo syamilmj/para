@@ -9,9 +9,9 @@ defmodule Para do
   ## Usage
 
   Let's imagine that you have a controller named `Web.UserController` and
-  wanted to validate the parameters for its `:create` and `:update` actions
+  wanted to validate the parameters for its `:create` and `:update` actions.
 
-  First, let's define your parameters schema
+  First, let's define your parameters schema.
 
       defmodule Web.UserPara do
         use Para
@@ -31,7 +31,8 @@ defmodule Para do
         end
       end
 
-  You can now use this module as a validator in your controller
+  This will generate two `validate/2` functions for your module
+  with the action and params as the arguments.
 
       defmodule Web.UserController do
         use Web, :schema
@@ -42,7 +43,16 @@ defmodule Para do
             # ...
           end
         end
+
+        def update(conn, params) do
+          with {:ok, data} <- UserPara.validate(:update, params) do
+            # ...
+          end
+        end
       end
+
+  The `validate/2` function will return either an `{:ok, map}` or `{:error, changeset}`
+  tuple.
 
   ## Inline validators
 
@@ -116,10 +126,42 @@ defmodule Para do
   """
 
   @type t :: {:ok, map()} | {:error, Ecto.Changeset.t()}
+  @type data :: %{atom => term}
+
+  @doc """
+  Parse and validate parameters for a given action.
+
+  The function will cast all the returned map keys into atoms except
+  for embedded map or list.
+
+  ## Examples
+
+      defmodule OrderPara do
+        use Para
+
+        validator :create do
+          required :title
+          required :data, {:array, :map}
+        end
+      end
+
+      # Validate action with parameters
+      OrderPara.validate(:create, %{
+        "title" => "test"
+        "data" => [%{"color" => "black", "material" => "cotton"}]
+      })
+      #=> {:ok, %{
+        title: "test"
+        data: [%{"color" => "black", "material" => "cotton"}]
+      }}
+  """
+  @callback validate(atom, map) :: {:ok, data} | {:error, Ecto.Changeset.t()}
 
   @doc false
   defmacro __using__(_) do
     quote do
+      @behaviour Para
+
       import Para,
         only: [
           validator: 2,
@@ -133,12 +175,6 @@ defmodule Para do
           embeds_one: 2,
           embeds_many: 2
         ]
-
-      @doc """
-      Parse and validate parameters for a given action
-      """
-      @spec validate(atom, map) :: {:ok, map} | {:error, Ecto.Changeset.t()}
-      def validate(action, params)
     end
   end
 
@@ -175,8 +211,22 @@ defmodule Para do
   end
 
   @doc """
-  Define custom callback to perform any additional parsing or validation
-  to the processed changeset or parameters
+  Define a custom callback function that will be called to perform any
+  additional manipulation to the changeset or parameters.
+
+  The callback function must accept two arguments namely `changeset` and
+  `params` and return an `Ecto.Changeset` struct.
+
+  ## Examples
+
+      # Define callback function to be called
+      validator :create do
+        callback :validate_price
+      end
+
+      def validate_price(changeset, params) do
+        #...
+      end
   """
   defmacro callback(name) do
     quote do
@@ -231,6 +281,21 @@ defmodule Para do
 
   @doc """
   Define an embedded map field
+
+  It accepts similar schema definition like `validator/2`.
+
+  ## Examples
+
+      defmodule ParentPara do
+        use Para
+
+        validator :create do
+          embeds_one :child do
+            optional :name, :string
+            optional :age,  :integer
+          end
+        end
+      end
   """
   defmacro embeds_one(name, do: block) do
     fields =
@@ -245,7 +310,22 @@ defmodule Para do
   end
 
   @doc """
-  Define an embedded array of maps field
+  Define an embedded array of maps field.
+
+  It accepts similar schema definition like `validator/2`.
+
+  ## Examples
+
+      defmodule OrderPara do
+        use Para
+
+        validator :create do
+          embeds_many :items do
+            required :title
+            required :price, :float
+          end
+        end
+      end
   """
   defmacro embeds_many(name, do: block) do
     fields =

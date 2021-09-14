@@ -199,16 +199,18 @@ defmodule ParaTest do
     use Para
 
     validator :test do
-      required :data, {:array, :map}
+      required :map, :map
       required :list, {:array, :string}
+      required :data, {:array, :map}
     end
   end
 
-  test "it validates arrays and returns original data" do
-    data = [%{"foo" => "bar"}, %{"baz" => "qux"}]
+  test "it validates embedded map or arrays and returns original data" do
+    map = %{"foo" => "bar"}
     list = ["one", "two"]
-    params = %{"data" => data, "list" => list}
+    data = [%{"foo" => "bar"}, %{"baz" => "qux"}]
+    params = %{"map" => map, "list" => list, "data" => data}
 
-    assert {:ok, %{data: ^data, list: ^list}} = ArrayMapPara.validate(:test, params)
+    assert {:ok, %{map: ^map, list: ^list, data: ^data}} = ArrayMapPara.validate(:test, params)
   end
 end
