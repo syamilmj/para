@@ -57,7 +57,7 @@ You can now use this module as a validator in your controller
 
 ```elixir
 defmodule Web.UserController do
-  use Web, :schema
+  use Web, :controller
   alias Web.UserPara
 
   def create(conn, params) do

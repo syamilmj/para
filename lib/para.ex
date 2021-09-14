@@ -32,10 +32,10 @@ defmodule Para do
       end
 
   This will generate two `validate/2` functions for your module
-  with the action and params as the arguments.
+  with action `name` and `params` as arguments.
 
       defmodule Web.UserController do
-        use Web, :schema
+        use Web, :controller
         alias Web.UserPara
 
         def create(conn, params) do
