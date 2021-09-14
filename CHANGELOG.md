@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## [v0.2.2]
+
+### Improvements
+
+- Fix embeds_many
+- Fix return values for embedded map or array of maps
+- Improve docs
+
 ## [v0.2.1]
 
 ### Improvements
