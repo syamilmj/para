@@ -39,7 +39,7 @@ defmodule Para.MixProject do
 
   def package do
     [
-      files: ~w(lib mix.exs README* LICENSE CHANGELOG.md),
+      files: ~w(lib mix.exs README* LICENSE CHANGELOG.md .formatter.exs),
       maintainers: ["Syamil MJ"],
       licenses: ["Apache 2.0"],
       links: %{"GitHub" => @source_url}
