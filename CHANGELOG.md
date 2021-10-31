@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [v0.2.4]
+
+### Improvements
+
+- Extend support for custom inline validator
+
 ## [v0.2.3]
 
 ### Improvements
