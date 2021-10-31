@@ -213,4 +213,52 @@ defmodule ParaTest do
 
     assert {:ok, %{map: ^map, list: ^list, data: ^data}} = ArrayMapPara.validate(:test, params)
   end
+
+  defmodule CustomInlineValidatorPara do
+    use Para
+    import Ecto.Changeset
+
+    validator :test do
+      required :url, :string, validator: :validate_url
+      required :another_url, :string, validator: {:validate_url, [host: "example.com"]}
+    end
+
+    def validate_url(changeset, key, opts) do
+      with {:ok, url} <- fetch_change(changeset, key),
+           {:url, true} <- {:url, url =~ ~r/http(s?)/i},
+           {:host, true} <- {:host, valid_host?(url, opts[:host])} do
+        changeset
+      else
+        :error -> changeset
+        {:url, _} -> add_error(changeset, key, "invalid URL")
+        {:host, _} -> add_error(changeset, key, "invalid host")
+      end
+    end
+
+    def valid_host?(_url, nil), do: true
+
+    def valid_host?(url, host) do
+      case URI.parse(url) do
+        %{host: ^host} -> true
+        _ -> false
+      end
+    end
+  end
+
+  describe "with custom inline validator" do
+    test "it validates correct params" do
+      params = %{url: "http://example.com", another_url: "https://example.com/1234"}
+      result = CustomInlineValidatorPara.validate(:test, params)
+
+      assert {:ok, ^params} = result
+    end
+
+    test "it validates incorrect params" do
+      params = %{url: "ftp://example.com", another_url: "https://example.net/1234"}
+
+      assert {:error, error} = CustomInlineValidatorPara.validate(:test, params)
+
+      assert %{errors: [url: {"invalid URL", []}, another_url: {"invalid host", []}]} = error
+    end
+  end
 end

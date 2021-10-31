@@ -261,6 +261,12 @@ defmodule Para do
         required :country, :string, [validator: :validate_country]
       end
 
+  You can also supply options with your custom inline validator
+
+      validator :create do
+        required :country, :string, [validator: {:validate_country, region: :asia}]
+      end
+
   """
   defmacro required(name, type \\ :string, opts \\ []) do
     quote do
@@ -509,6 +515,9 @@ defmodule Para do
 
       {function, data, opts} ->
         do_apply_inline_validator(module, function, [changeset, key] ++ [data, opts])
+
+      function when is_atom(function) ->
+        do_apply_inline_validator(module, function, [changeset, key, []])
 
       _ ->
         changeset
