@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [v0.3.0]
+
+### Added
+
+- `spec/2` - helper callback function to build custom changesets
+
+### Improvements
+
+- Fixed documentation for custom inline validator
+
 ## [v0.2.4]
 
 ### Improvements
