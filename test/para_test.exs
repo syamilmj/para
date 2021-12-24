@@ -261,4 +261,35 @@ defmodule ParaTest do
       assert %{errors: [url: {"invalid URL", []}, another_url: {"invalid host", []}]} = error
     end
   end
+
+  defmodule SpecPara do
+    use Para
+
+    validator :test do
+      required :title, :string
+
+      embeds_one :product do
+        required :name
+        required :price, :float
+      end
+    end
+  end
+
+  test "it builds spec for changeset" do
+    spec = SpecPara.spec(:test, %{})
+
+    assert %{
+             data: %{product: nil, title: nil},
+             embeds: %{
+               product:
+                 {:embed_one, [{:required, :name, :string, []}, {:required, :price, :float, []}]}
+             },
+             permitted: [:title],
+             required: [:title],
+             types: %{product: {:map, :string}, title: :string},
+             validators: %{}
+           } = spec
+
+    assert %Ecto.Changeset{} = Ecto.Changeset.change({spec.data, spec.types}, %{})
+  end
 end
