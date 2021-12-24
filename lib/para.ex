@@ -69,17 +69,18 @@ defmodule Para do
       end
 
   You can also use custom inline validators by supplying the function name
-  as an atom. Custom inline validator will receive `changeset` and the
-  original `params` as the arguments.
+  as an atom. Similar to most Ecto's built-in validators, the function will
+  receive `changeset`, `key`, and `opts` as the arguments.
 
       defmodule UserPara do
         use Para
 
         validator :update do
           required :age, :string, validator: :validate_age
+          required :gender, :string, validator: {:validate_gender, [allow: :non_binary]}
         end
 
-        def validate_age(changeset, params) do
+        def validate_age(changeset, key, opts) do
           # ...
         end
       end
