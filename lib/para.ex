@@ -128,6 +128,14 @@ defmodule Para do
 
   @type t :: {:ok, map()} | {:error, Ecto.Changeset.t()}
   @type data :: %{atom => term}
+  @type spec :: %{
+          data: map,
+          types: map,
+          embeds: map,
+          permitted: list,
+          required: list,
+          validators: map
+        }
 
   @doc """
   Parse and validate parameters for a given action.
@@ -157,6 +165,32 @@ defmodule Para do
       }}
   """
   @callback validate(atom, map) :: {:ok, data} | {:error, Ecto.Changeset.t()}
+
+  @doc """
+  Returns basic spec.
+
+  This is useful when you need to build a custom changeset,
+  or when you just need the basic structure of your schema.
+
+  Also see: `Ecto.Changeset.change/2`
+
+  ## Examples
+
+      defmodule OrderPara do
+        use Para
+
+        validator :create do
+          required :title
+          required :data, {:array, :map}
+        end
+      end
+
+      def changeset(:new, params) do
+        spec = __MODULE__.spec(:create, params)
+        Ecto.Changeset.change(spec.data, spec.types)
+      end
+  """
+  @callback spec(atom, map) :: spec()
 
   @doc false
   defmacro __using__(_) do
@@ -207,6 +241,10 @@ defmodule Para do
     quote do
       def validate(unquote(name), params) do
         Para.validate(__MODULE__, unquote(fields), params)
+      end
+
+      def spec(unquote(name), params) do
+        Para.build_spec(unquote(fields), params)
       end
     end
   end
