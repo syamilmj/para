@@ -186,7 +186,7 @@ defmodule Para do
       end
 
       def changeset(:new, params) do
-        spec = __MODULE__.spec(:create, params)
+        spec = spec(:create, params)
         Ecto.Changeset.change(spec.data, spec.types)
       end
   """
