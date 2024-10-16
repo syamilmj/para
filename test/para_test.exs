@@ -9,6 +9,10 @@ defmodule ParaTest do
     validator :create do
       required :name
       required :price, :float
+
+      optional :vendor, :string,
+        validator: {:validate_inclusion, ["apple", "lenovo"], message: "is not registered"}
+
       optional :category, :string, validator: {:validate_inclusion, ["mobile", "laptop"]}
     end
   end
@@ -27,6 +31,15 @@ defmodule ParaTest do
 
     assert {:error, %{errors: [category: {"is invalid", _}]}} =
              ProductParams.validate(:create, params)
+  end
+
+  test "it returns custom error message" do
+    params = %{vendor: "dell"}
+
+    {:error, %{errors: errors}} = ProductParams.validate(:create, params)
+    error = Enum.find(errors, &(elem(&1, 0) == :vendor))
+
+    assert {:vendor, {"is not registered", _}} = error
   end
 
   defmodule AnimalParams do
