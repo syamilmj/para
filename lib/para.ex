@@ -1,7 +1,6 @@
 defmodule Para do
   @moduledoc """
-  Para is an Elixir library that provides structured and
-  declarative way to parse and validate parameters.
+  Structured and declarative way to parse and validate parameters.
 
   Para uses Ecto under the hood and therefore inherits most of
   its utilities such as changeset and built-in validators.
@@ -13,7 +12,7 @@ defmodule Para do
 
   First, let's define your parameters schema.
 
-      defmodule Web.UserPara do
+      defmodule Web.UserParams do
         use Para
 
         validator :create do
@@ -36,16 +35,16 @@ defmodule Para do
 
       defmodule Web.UserController do
         use Web, :controller
-        alias Web.UserPara
+        alias Web.UserParams, as: Params
 
         def create(conn, params) do
-          with {:ok, data} <- UserPara.validate(:create, params) do
+          with {:ok, data} <- Params.validate(:create, params) do
             # ...
           end
         end
 
         def update(conn, params) do
-          with {:ok, data} <- UserPara.validate(:update, params) do
+          with {:ok, data} <- Params.validate(:update, params) do
             # ...
           end
         end
@@ -60,7 +59,7 @@ defmodule Para do
   especially useful when you need to perform some basic validation
   using `Ecto.Changeset`'s built-in validators.
 
-      defmodule UserPara do
+      defmodule UserParams do
         use Para
 
         validator :update do
@@ -69,10 +68,10 @@ defmodule Para do
       end
 
   You can also use custom inline validators by supplying the function name
-  as an atom. Similar to most Ecto's built-in validators, the function will
+  as an atom. Similar to most of Ecto's built-in validators, the function will
   receive `changeset`, `key`, and `opts` as the arguments.
 
-      defmodule UserPara do
+      defmodule UserParams do
         use Para
 
         validator :update do
@@ -91,9 +90,9 @@ defmodule Para do
   additional data manipulations. For this, you can use the `callback/1` macro.
 
   The `callback/1` macro will always be the last function to be called
-  after the validator has parsed and validated the parameters.
+  after the parametes have been parsed and validated.
 
-      defmodule Web.UserPara do
+      defmodule Web.UserParams do
         use Para
 
         validator :create do
@@ -145,7 +144,7 @@ defmodule Para do
 
   ## Examples
 
-      defmodule OrderPara do
+      defmodule OrderParams do
         use Para
 
         validator :create do
@@ -155,7 +154,7 @@ defmodule Para do
       end
 
       # Validate action with parameters
-      OrderPara.validate(:create, %{
+      OrderParams.validate(:create, %{
         "title" => "test"
         "data" => [%{"color" => "black", "material" => "cotton"}]
       })
@@ -167,7 +166,7 @@ defmodule Para do
   @callback validate(atom, map) :: {:ok, data} | {:error, Ecto.Changeset.t()}
 
   @doc """
-  Returns basic spec.
+  Returns a basic spec.
 
   This is useful when you need to build a custom changeset,
   or when you just need the basic structure of your schema.
@@ -176,7 +175,7 @@ defmodule Para do
 
   ## Examples
 
-      defmodule OrderPara do
+      defmodule OrderParams do
         use Para
 
         validator :create do
@@ -219,7 +218,7 @@ defmodule Para do
   This will generate a new function called `validate/2` with the action `name`
   and `params` as the arguments.
 
-      iex> defmodule UserPara do
+      iex> defmodule UserParams do
       ...>   use Para
       ...>
       ...>   validator :create do
@@ -227,7 +226,7 @@ defmodule Para do
       ...>   end
       ...> end
       ...>
-      ...> UserPara.validate(:create, %{"name" => "Syamil MJ"})
+      ...> UserParams.validate(:create, %{"name" => "Syamil MJ"})
       {:ok, %{name: "Syamil MJ"}}
 
   """
@@ -316,7 +315,7 @@ defmodule Para do
   @doc """
   Define an optional field.
 
-  Similar to `required/3`, it also accepts the same Options
+  Please refer to `required/3` for the list of available options.
   """
   defmacro optional(name, type \\ :string, opts \\ []) do
     quote do
@@ -331,7 +330,7 @@ defmodule Para do
 
   ## Examples
 
-      defmodule ParentPara do
+      defmodule ParentParams do
         use Para
 
         validator :create do
@@ -361,7 +360,7 @@ defmodule Para do
 
   ## Examples
 
-      defmodule OrderPara do
+      defmodule OrderParams do
         use Para
 
         validator :create do

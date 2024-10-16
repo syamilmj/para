@@ -3,7 +3,7 @@ defmodule ParaTest do
 
   doctest Para
 
-  defmodule ProductPara do
+  defmodule ProductParams do
     use Para
 
     validator :create do
@@ -14,22 +14,22 @@ defmodule ParaTest do
   end
 
   test "it validates required fields" do
-    assert {:error, %{valid?: false}} = ProductPara.validate(:create, %{})
+    assert {:error, %{valid?: false}} = ProductParams.validate(:create, %{})
   end
 
   test "it validates using defined validator" do
     params = %{"name" => "iPod", "price" => "20.00"}
-    assert {:ok, %{name: "iPod", price: 20.0}} = ProductPara.validate(:create, params)
+    assert {:ok, %{name: "iPod", price: 20.0}} = ProductParams.validate(:create, params)
   end
 
   test "it validates using inline validator" do
     params = %{"name" => "iPod", "price" => "20.00", "category" => "desktop"}
 
     assert {:error, %{errors: [category: {"is invalid", _}]}} =
-             ProductPara.validate(:create, params)
+             ProductParams.validate(:create, params)
   end
 
-  defmodule AnimalPara do
+  defmodule AnimalParams do
     use Para
 
     validator :create do
@@ -40,17 +40,17 @@ defmodule ParaTest do
 
   test "it discards droppable fields" do
     params = %{"name" => "Cheetah"}
-    assert {:ok, %{name: "Cheetah"}} = AnimalPara.validate(:create, params)
+    assert {:ok, %{name: "Cheetah"}} = AnimalParams.validate(:create, params)
   end
 
   test "it rejects empty value for droppable fields" do
     params = %{"name" => "Cheetah", "origin" => ""}
 
     assert {:error, %{errors: [origin: {"can't be blank", _}]}} =
-             AnimalPara.validate(:create, params)
+             AnimalParams.validate(:create, params)
   end
 
-  defmodule VehiclePara do
+  defmodule VehicleParams do
     use Para
     import Ecto.Changeset
 
@@ -75,10 +75,10 @@ defmodule ParaTest do
     params = %{"brand" => "Tesla", "fuel_source" => "coal"}
 
     assert {:error, %{errors: [fuel_source: {"is not eco-friendly", _}]}} =
-             VehiclePara.validate(:create, params)
+             VehicleParams.validate(:create, params)
   end
 
-  defmodule EmbedsOnePara do
+  defmodule EmbedsOneParams do
     use Para
 
     validator :test do
@@ -95,24 +95,24 @@ defmodule ParaTest do
     params = %{"title" => "test", "product" => %{"name" => "TEST", "price" => "10.00"}}
 
     assert {:ok, %{title: "test", product: %{name: "TEST", price: 10.0}}} =
-             EmbedsOnePara.validate(:test, params)
+             EmbedsOneParams.validate(:test, params)
   end
 
   test "it validates embeds_one with atom keys" do
     params = %{title: "test", product: %{name: "TEST", price: "10.00"}}
 
     assert {:ok, %{title: "test", product: %{name: "TEST", price: 10.0}}} =
-             EmbedsOnePara.validate(:test, params)
+             EmbedsOneParams.validate(:test, params)
   end
 
   test "it rejects invalid embeds_one params" do
     params = %{"title" => "test", "product" => %{"price" => "10.00"}}
 
     assert {:error, %{changes: %{product: %{errors: [name: {"can't be blank", _}]}}}} =
-             EmbedsOnePara.validate(:test, params)
+             EmbedsOneParams.validate(:test, params)
   end
 
-  defmodule EmbedsManyPara do
+  defmodule EmbedsManyParams do
     use Para
 
     validator :test do
@@ -138,12 +138,12 @@ defmodule ParaTest do
             %{
               title: "test",
               products: [%{name: "TEST1", price: 10.0}, %{name: "TEST2", price: 20.0}]
-            }} = EmbedsManyPara.validate(:test, params)
+            }} = EmbedsManyParams.validate(:test, params)
   end
 
   test "it validates empty embeds_many params" do
     params = %{"title" => "test", "products" => nil}
-    assert {:ok, %{title: "test", products: nil}} = EmbedsManyPara.validate(:test, params)
+    assert {:ok, %{title: "test", products: nil}} = EmbedsManyParams.validate(:test, params)
   end
 
   test "it rejects invalid embeds_many params" do
@@ -156,7 +156,7 @@ defmodule ParaTest do
     }
 
     assert {:error, %{changes: %{products: [_, %{valid?: false}]}}} =
-             EmbedsManyPara.validate(:test, invalid_params)
+             EmbedsManyParams.validate(:test, invalid_params)
   end
 
   defmodule EmbedsManyWithCallback do
@@ -195,7 +195,7 @@ defmodule ParaTest do
              EmbedsManyWithCallback.validate(:test, params)
   end
 
-  defmodule ArrayMapPara do
+  defmodule ArrayMapParams do
     use Para
 
     validator :test do
@@ -211,10 +211,10 @@ defmodule ParaTest do
     data = [%{"foo" => "bar"}, %{"baz" => "qux"}]
     params = %{"map" => map, "list" => list, "data" => data}
 
-    assert {:ok, %{map: ^map, list: ^list, data: ^data}} = ArrayMapPara.validate(:test, params)
+    assert {:ok, %{map: ^map, list: ^list, data: ^data}} = ArrayMapParams.validate(:test, params)
   end
 
-  defmodule CustomInlineValidatorPara do
+  defmodule CustomInlineValidatorParams do
     use Para
     import Ecto.Changeset
 
@@ -248,7 +248,7 @@ defmodule ParaTest do
   describe "with custom inline validator" do
     test "it validates correct params" do
       params = %{url: "http://example.com", another_url: "https://example.com/1234"}
-      result = CustomInlineValidatorPara.validate(:test, params)
+      result = CustomInlineValidatorParams.validate(:test, params)
 
       assert {:ok, ^params} = result
     end
@@ -256,13 +256,13 @@ defmodule ParaTest do
     test "it validates incorrect params" do
       params = %{url: "ftp://example.com", another_url: "https://example.net/1234"}
 
-      assert {:error, error} = CustomInlineValidatorPara.validate(:test, params)
+      assert {:error, error} = CustomInlineValidatorParams.validate(:test, params)
 
       assert %{errors: [url: {"invalid URL", []}, another_url: {"invalid host", []}]} = error
     end
   end
 
-  defmodule SpecPara do
+  defmodule SpecParams do
     use Para
 
     validator :test do
@@ -276,7 +276,7 @@ defmodule ParaTest do
   end
 
   test "it builds spec for changeset" do
-    spec = SpecPara.spec(:test, %{})
+    spec = SpecParams.spec(:test, %{})
 
     assert %{
              data: %{product: nil, title: nil},
