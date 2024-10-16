@@ -23,7 +23,7 @@ Add Para as a dependency in your `mix.exs` file.
 
 ```
 def deps do
-  [{:para, "~> 0.3"}]
+  [{:para, "~> 0.4"}]
 end
 ```
 

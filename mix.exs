@@ -1,7 +1,7 @@
 defmodule Para.MixProject do
   use Mix.Project
 
-  @version "0.3.0"
+  @version "0.4.0"
   @source_url "https://github.com/syamilmj/para"
 
   def project do
@@ -13,7 +13,7 @@ defmodule Para.MixProject do
       deps: deps(),
 
       # Hex
-      description: "A declarative way to parse and validate parameters",
+      description: "A declarative way to parse and validate params using Ecto.Schema",
       package: package(),
 
       # Docs
@@ -33,7 +33,7 @@ defmodule Para.MixProject do
   defp deps do
     [
       {:ecto, "~> 3.12"},
-      {:ex_doc, "~> 0.20", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.20", only: :docs}
     ]
   end
 
