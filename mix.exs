@@ -32,8 +32,8 @@ defmodule Para.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ecto, "~> 3.12"},
-      {:ex_doc, "~> 0.20", only: :docs}
+      {:ecto, "~> 3.5"},
+      {:ex_doc, ">= 0.0.0", only: :docs}
     ]
   end
 
