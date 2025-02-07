@@ -269,9 +269,9 @@ defmodule ParaTest do
     test "it validates incorrect params" do
       params = %{url: "ftp://example.com", another_url: "https://example.net/1234"}
 
-      assert {:error, error} = CustomInlineValidatorParams.validate(:test, params)
-
-      assert %{errors: [url: {"invalid URL", []}, another_url: {"invalid host", []}]} = error
+      assert {:error, changeset} = CustomInlineValidatorParams.validate(:test, params)
+      assert "invalid URL" in errors_on(changeset).url
+      assert "invalid host" in errors_on(changeset).another_url
     end
   end
 
@@ -304,5 +304,46 @@ defmodule ParaTest do
            } = spec
 
     assert %Ecto.Changeset{} = Ecto.Changeset.change({spec.data, spec.types}, %{})
+  end
+
+  defmodule CustomType do
+    use Ecto.Type
+
+    def type, do: :map
+    def cast(data), do: {:ok, data}
+    def load(data), do: {:ok, data}
+    def dump(data), do: {:ok, data}
+  end
+
+  defmodule CustomTypeParams do
+    use Para
+
+    validator :test do
+      required :status, Ecto.Enum, values: [:active, :inactive]
+      required :data, CustomType
+    end
+  end
+
+  test "it validates custom Ecto.Type and Ecto.ParameterizedType fields" do
+    params = %{status: :active, data: %{"foo" => "bar"}}
+    result = CustomTypeParams.validate(:test, params)
+
+    assert {:ok, ^params} = result
+  end
+
+  @doc """
+  A helper that transforms changeset errors into a map of messages.
+
+      assert {:error, changeset} = Accounts.create_user(%{password: "short"})
+      assert "password is too short" in errors_on(changeset).password
+      assert %{password: ["password is too short"]} = errors_on(changeset)
+
+  """
+  def errors_on(changeset) do
+    Ecto.Changeset.traverse_errors(changeset, fn {message, opts} ->
+      Regex.replace(~r"%{(\w+)}", message, fn _, key ->
+        opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
+      end)
+    end)
   end
 end

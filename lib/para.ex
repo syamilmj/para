@@ -429,6 +429,8 @@ defmodule Para do
         |> put_in([:types, name], {:map, :string})
 
       {requirement, name, type, opts}, acc ->
+        type = init_field_type(type, opts)
+
         acc
         |> put_in([:data, name], opts[:default])
         |> put_in([:types, name], type)
@@ -599,4 +601,30 @@ defmodule Para do
   end
 
   def apply_changes(any), do: any
+
+  # We don't perform advanced validation here, as Ecto will handle the rest
+  defp init_field_type(type, opts) when is_atom(type) do
+    cond do
+      Ecto.Type.base?(type) ->
+        type
+
+      Code.ensure_compiled(type) == {:module, type} ->
+        cond do
+          function_exported?(type, :type, 0) ->
+            type
+
+          function_exported?(type, :type, 1) ->
+            Ecto.ParameterizedType.init(type, opts)
+
+          true ->
+            raise ArgumentError,
+                  "module #{inspect(type)} is not an Ecto.Type/Ecto.ParameterizedType"
+        end
+
+      true ->
+        type
+    end
+  end
+
+  defp init_field_type(type, _), do: type
 end
