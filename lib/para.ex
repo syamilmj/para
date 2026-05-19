@@ -503,12 +503,16 @@ defmodule Para do
   def validate_embed(changeset, module, name, {:embed_one, block}, params) do
     params = Map.get(params, Atom.to_string(name))
 
-    case do_validate(module, block, params) do
-      %{valid?: true} = valid_changeset ->
-        Ecto.Changeset.put_change(changeset, name, valid_changeset)
+    if is_map(params) do
+      case do_validate(module, block, params) do
+        %{valid?: true} = valid_changeset ->
+          Ecto.Changeset.put_change(changeset, name, valid_changeset)
 
-      invalid_changeset ->
-        Ecto.Changeset.put_change(%{changeset | valid?: false}, name, invalid_changeset)
+        invalid_changeset ->
+          Ecto.Changeset.put_change(%{changeset | valid?: false}, name, invalid_changeset)
+      end
+    else
+      changeset
     end
   end
 

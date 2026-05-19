@@ -125,6 +125,16 @@ defmodule ParaTest do
              EmbedsOneParams.validate(:test, params)
   end
 
+  test "it skips validation when embeds_one key is missing" do
+    params = %{"title" => "test"}
+    assert {:ok, %{title: "test", product: nil}} = EmbedsOneParams.validate(:test, params)
+  end
+
+  test "it skips validation when embeds_one params are nil" do
+    params = %{"title" => "test", "product" => nil}
+    assert {:ok, %{title: "test", product: nil}} = EmbedsOneParams.validate(:test, params)
+  end
+
   defmodule EmbedsManyParams do
     use Para
 
