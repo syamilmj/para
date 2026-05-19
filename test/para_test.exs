@@ -341,6 +341,63 @@ defmodule ParaTest do
     assert {:ok, ^params} = result
   end
 
+  defmodule DroppableEmbedsParams do
+    use Para
+
+    validator :update do
+      required :name, :string
+
+      embeds_one :address, droppable: true do
+        required :street, :string
+        required :city, :string
+      end
+
+      embeds_many :tags, droppable: true do
+        required :label, :string
+      end
+    end
+  end
+
+  describe "droppable embeds_one" do
+    test "drops the embed when the key is missing" do
+      params = %{"name" => "Alice"}
+      assert {:ok, result} = DroppableEmbedsParams.validate(:update, params)
+      assert result == %{name: "Alice"}
+    end
+
+    test "validates the embed when the key is present" do
+      params = %{
+        "name" => "Alice",
+        "address" => %{"street" => "1 Main", "city" => "Springfield"}
+      }
+
+      assert {:ok, %{name: "Alice", address: %{street: "1 Main", city: "Springfield"}}} =
+               DroppableEmbedsParams.validate(:update, params)
+    end
+
+    test "rejects the embed when its required fields are missing" do
+      params = %{"name" => "Alice", "address" => %{"street" => "1 Main"}}
+
+      assert {:error, %{changes: %{address: %{errors: [city: {"can't be blank", _}]}}}} =
+               DroppableEmbedsParams.validate(:update, params)
+    end
+  end
+
+  describe "droppable embeds_many" do
+    test "drops the embed when the key is missing" do
+      params = %{"name" => "Alice"}
+      assert {:ok, result} = DroppableEmbedsParams.validate(:update, params)
+      refute Map.has_key?(result, :tags)
+    end
+
+    test "validates the embed when the key is present" do
+      params = %{"name" => "Alice", "tags" => [%{"label" => "vip"}, %{"label" => "beta"}]}
+
+      assert {:ok, %{name: "Alice", tags: [%{label: "vip"}, %{label: "beta"}]}} =
+               DroppableEmbedsParams.validate(:update, params)
+    end
+  end
+
   @doc """
   A helper that transforms changeset errors into a map of messages.
 
