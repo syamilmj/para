@@ -7,7 +7,9 @@ locals_without_parens = [
   optional: 3,
   callback: 1,
   embeds_one: 2,
-  embeds_many: 2
+  embeds_one: 3,
+  embeds_many: 2,
+  embeds_many: 3
 ]
 
 [

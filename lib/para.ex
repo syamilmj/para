@@ -207,7 +207,9 @@ defmodule Para do
           optional: 3,
           callback: 1,
           embeds_one: 2,
-          embeds_many: 2
+          embeds_one: 3,
+          embeds_many: 2,
+          embeds_many: 3
         ]
     end
   end
@@ -324,9 +326,14 @@ defmodule Para do
   end
 
   @doc """
-  Define an embedded map field
+  Define an embedded map field.
 
   It accepts similar schema definition like `validator/2`.
+
+  ## Options
+
+    * `:droppable` - Drop the embed when the key doesn't exist in parameters.
+      This is useful for partial updates where the whole embed may be omitted.
 
   ## Examples
 
@@ -340,8 +347,18 @@ defmodule Para do
           end
         end
       end
+
+      defmodule ParentParams do
+        use Para
+
+        validator :update do
+          embeds_one :child, droppable: true do
+            optional :name, :string
+          end
+        end
+      end
   """
-  defmacro embeds_one(name, do: block) do
+  defmacro embeds_one(name, opts \\ [], do: block) do
     fields =
       case block do
         {:__block__, _, fields} -> fields
@@ -349,7 +366,7 @@ defmodule Para do
       end
 
     quote do
-      {:embed_one, unquote(name), unquote(fields)}
+      {:embed_one, unquote(name), unquote(fields), unquote(opts)}
     end
   end
 
@@ -357,6 +374,11 @@ defmodule Para do
   Define an embedded array of maps field.
 
   It accepts similar schema definition like `validator/2`.
+
+  ## Options
+
+    * `:droppable` - Drop the embed when the key doesn't exist in parameters.
+      This is useful for partial updates where the whole embed may be omitted.
 
   ## Examples
 
@@ -370,8 +392,19 @@ defmodule Para do
           end
         end
       end
+
+      defmodule OrderParams do
+        use Para
+
+        validator :update do
+          embeds_many :items, droppable: true do
+            required :title
+            required :price, :float
+          end
+        end
+      end
   """
-  defmacro embeds_many(name, do: block) do
+  defmacro embeds_many(name, opts \\ [], do: block) do
     fields =
       case block do
         {:__block__, _, fields} -> fields
@@ -379,7 +412,7 @@ defmodule Para do
       end
 
     quote do
-      {:embed_many, unquote(name), unquote(fields)}
+      {:embed_many, unquote(name), unquote(fields), unquote(opts)}
     end
   end
 
@@ -416,13 +449,13 @@ defmodule Para do
     fields
     |> discard_droppable_fields(params)
     |> Enum.reduce(default, fn
-      {:embed_one, name, block}, acc ->
+      {:embed_one, name, block, _opts}, acc ->
         acc
         |> put_in([:data, name], nil)
         |> put_in([:embeds, name], {:embed_one, block})
         |> put_in([:types, name], {:map, :string})
 
-      {:embed_many, name, block}, acc ->
+      {:embed_many, name, block, _opts}, acc ->
         acc
         |> put_in([:data, name], nil)
         |> put_in([:embeds, name], {:embed_many, block})
@@ -446,17 +479,7 @@ defmodule Para do
   @doc false
   def discard_droppable_fields(fields, params) do
     Enum.filter(fields, fn
-      # optional/required fields
-      {_, name, _, opts} ->
-        with true <- opts[:droppable],
-             false <- Map.has_key?(params, Atom.to_string(name)) do
-          false
-        else
-          _ -> true
-        end
-
-      # embed fields
-      {_, name, opts} ->
+      {_, name, _, opts} when is_list(opts) ->
         with true <- opts[:droppable],
              false <- Map.has_key?(params, Atom.to_string(name)) do
           false
